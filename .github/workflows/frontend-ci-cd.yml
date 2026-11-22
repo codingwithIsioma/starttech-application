@@ -34,7 +34,7 @@ jobs:
               run: npm ci
 
             - name: Run security scan
-              run: npm audit --audit-level=high || npm audit fix
+              run: npm audit --audit-level=high || npm audit fix --force
 
             - name: Compile static site
               id: npm_artifact
