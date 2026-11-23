@@ -48,4 +48,31 @@ jobs:
             - name: Checkout Code
               uses: actions/checkout@v7
 
+            - name: Configure AWS Credentials
+              uses: aws-actions/configure-aws-credentials@v6.3.0
+              with:
+                aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                aws-region: ${{ secrets.AWS_REGION }}
+
+            - name: Login to Amazon ECR
+              id: ecr
+              uses: aws-actions/amazon-ecr-login@v2
+
+            - name: Setup ECR Repository
+              uses: deploy-actions/setup-ecr@v1
+              with:
+                RespositoryName: starttech-backend-api
+            
+            - name: Setup Docker Buildx
+              uses: docker/setup-buildx-action@v4
+
+            - name: Build and push
+              uses: docker/build-push-action@v6
+              with:
+                context: backend/Dockerfile
+                push: true
+                tags: ${{ steps.ecr.outputs.registry }}/starttech-backend-api:${{ github.sha }}
+              
+
         
