@@ -17,8 +17,8 @@ jobs:
         defaults:
             run:
                 working-directory: ./frontend
-        outputs:
-            artifact: ${{ steps.npm_artifact.outputs.artifact }}
+        # outputs:
+        #     artifact: ${{ steps.npm_artifact.outputs.artifact }}
         steps:
             - name: Checkout
               uses: actions/checkout@v7
@@ -37,8 +37,15 @@ jobs:
               run: npm audit || npm audit fix
 
             - name: Compile static site
-              id: npm_artifact
               run: npm run build
+
+            - name: Upload build artifact
+              uses: actions/upload-artifact@v7
+              # id: npm_artifact
+              with:
+                name: frontend-dist
+                path: frontend/dist
+
     
     deploy:
         needs: [test]
@@ -47,6 +54,12 @@ jobs:
         steps:
             #- name: Upload build file to S3 bucket
             #  run: aws s3 sync ${{ needs.test.outputs.artifact }} ${{ secrets.STATE_BUCKET }}
+            - name: Download artifact
+              uses: actions/download-artifact@v8
+              with:
+                name: frontend-dist
+                path: dist
+
             - name: Test artifact
-              run: echo "${{ needs.test.outputs.artifact }}"
+              run: ls -la dist
         
