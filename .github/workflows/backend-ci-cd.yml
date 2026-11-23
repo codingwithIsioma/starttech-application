@@ -62,7 +62,7 @@ jobs:
             - name: Setup ECR Repository
               uses: deploy-actions/setup-ecr@v1
               with:
-                RespositoryName: starttech-backend-api
+                RepositoryName: starttech-backend-api
             
             - name: Setup Docker Buildx
               uses: docker/setup-buildx-action@v4
