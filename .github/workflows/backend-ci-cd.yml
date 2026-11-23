@@ -45,4 +45,7 @@ jobs:
             run:
                 working-directory: ./backend
         steps:
+            - name: Checkout Code
+              uses: actions/checkout@v7
+              
         
