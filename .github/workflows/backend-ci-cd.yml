@@ -9,7 +9,7 @@ on:
             - .github/workflows/backend-ci-cd.yml
 
 permissions:
-    content: read
+    contents: read
 
 jobs:
     test:
