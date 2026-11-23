@@ -1,0 +1,38 @@
+name: Backend CI-CD
+
+on:
+    push:
+        branches: [features/backend-pipeline]
+        paths:
+            - backend/**
+            - k8s/**
+            - .github/workflows/backend-ci-cd.yml
+
+permissions:
+    content: read
+
+jobs:
+    test:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        default:
+            run:
+                working-directory: ./backend
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v7
+
+            - name: Setup Go
+              uses: actions/setup-go@7
+              with:
+                go-version: '1.25'
+            
+            - name: Download dependencies
+              run: go mod download
+
+            - name: Run Linter/Static Analysis
+              run: go vet ./...
+
+            - name: Run Unit Tests
+              run: go test ./...
+        
