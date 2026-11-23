@@ -2,10 +2,9 @@ name: Frontend CI-CD
 
 on:
     push:
-        branches: [features/frontend-pipeline]
+        branches: [main]
         paths: 
             - frontend/**
-            - .github/workflows/frontend-ci-cd.yml
 
 permissions:
     contents: read
@@ -68,4 +67,8 @@ jobs:
 
             - name: Upload build file to S3 bucket
               run: aws s3 sync dist/ s3://${{ secrets.FRONTEND_S3_BUCKET }} --delete
+
+            - name: Invalidate CloudFront cache
+              run: aws cloudfront create-invalidation --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*".
+
         
