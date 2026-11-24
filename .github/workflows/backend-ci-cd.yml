@@ -41,6 +41,8 @@ jobs:
         needs: [test]
         runs-on: ubuntu-latest
         timeout-minutes: 10
+        outputs:
+            image: ${{ steps.meta.outputs.images }}
         defaults:
             run:
                 working-directory: ./backend
@@ -53,7 +55,7 @@ jobs:
               with:
                 aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
                 aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-                aws-region: ${{ secrets.AWS_REGION }}
+                aws-region: ${{ vars.AWS_REGION }}
 
             - name: Login to Amazon ECR
               id: ecr
@@ -68,31 +70,62 @@ jobs:
             - name: Setup Docker
               uses: docker/setup-docker-action@v5
 
+            - name: Set image tag
+              id: meta
+              run: echo "image=${{ steps.ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}:${{ github.sha }}" >> "$GITHUB_OUTPUT"
+
             - name: Build Dockerfile
               run: |
-                docker build -t ${{ steps.ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}:${{ github.sha }} .
+                docker build -t ${{ steps.meta.outputs.image }} .
 
+            # Scan base-image OS packages; fail the build on fixable HIGH/CRITICAL issues
             - name: Trivy - OS packages (blocking)
               uses: aquasecurity/trivy-action@v0.36.0
               with:
-                image-ref: '${{ steps.ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}:${{ github.sha }}'
+                image-ref: '${{ steps.meta.outputs.image }}'
                 exit-code: '1'
                 ignore-unfixed: true
                 vuln-type: 'os'
                 severity: 'CRITICAL,HIGH'
             
+            # Scan Go modules in the binary; report findings without failing (app code is third-party)
             - name: Trivy - Go dependencies (report only)
               uses: aquasecurity/trivy-action@v0.36.0
               with:
-                image-ref: '${{ steps.ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}:${{ github.sha }}'
+                image-ref: '${{ steps.meta.outputs.image }}'
                 vuln-type: 'library'
                 severity: 'CRITICAL,HIGH'
                 ignore-unfixed: true
                 exit-code: '0'
 
-            - name: Push Dockerfile to ECR
+            - name: Push image to ECR
               run: |
-                docker push ${{ steps.ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY }}:${{ github.sha }}
+                docker push ${{ steps.meta.outputs.image }}
+    
+    deploy:
+        needs: [build]
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - name: Checkout Code
+              uses: actions/checkout@v7
+
+            - name: Configure AWS Credentials
+              uses: aws-actions/configure-aws-credentials@v6.3.0
+              with:
+                aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                aws-region: ${{ vars.AWS_REGION }}
+
+            - name: Update Kubernetes deployment manifest
+              env:
+                IMAGE: ${{ needs.build.outputs.image }}
+              run: |
+                cat k8s/deployment.yaml
+                sed "s|image: .*starttech-backend-api:.*|image: ${IMAGE}|" k8s/deployment.yaml
+                cat k8s/deployment.yaml
+
+
         
               
 
