@@ -42,7 +42,7 @@ jobs:
         runs-on: ubuntu-latest
         timeout-minutes: 10
         outputs:
-            image: ${{ steps.meta.outputs.images }}
+            image: ${{ steps.meta.outputs.image }}
         defaults:
             run:
                 working-directory: ./backend
@@ -122,7 +122,7 @@ jobs:
                 IMAGE: ${{ needs.build.outputs.image }}
               run: |
                 cat k8s/deployment.yaml
-                sed "s|image: .*starttech-backend-api:.*|image: ${IMAGE}|" k8s/deployment.yaml
+                sed -i "s|image: .*starttech-backend-api:.*|image: ${IMAGE}|" k8s/deployment.yaml
                 cat k8s/deployment.yaml
 
 
