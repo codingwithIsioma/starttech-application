@@ -1,5 +1,5 @@
 # ---------- Stage 1: build ----------
-FROM golang:1.25-alpine AS builder
+FROM golang:1.27-alpine AS builder
 
 WORKDIR /app
 
@@ -12,12 +12,13 @@ COPY . .
 RUN CGO_ENABLED=0 go build -o muchtodo ./cmd/api
 
 # ---------- Stage 2: run ----------
-FROM alpine:3.20
+FROM alpine:3.22
 
 WORKDIR /app
 
 # Create a non-root user
 RUN adduser -D appuser
+RUN apk upgrade --no-cache
 
 # Copy only the binary, plus .env.example as .env so the app
 # knows which config keys to read from environment variables
