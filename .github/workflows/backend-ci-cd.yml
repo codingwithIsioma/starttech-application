@@ -74,23 +74,21 @@ jobs:
 
             # Scan base-image OS packages; fail the build on fixable HIGH/CRITICAL issues
             - name: Trivy - OS packages (blocking)
-              uses: aquasecurity/trivy-action@v0.76.2
-              with:
-                image-ref: '${{ steps.meta.outputs.image }}'
-                exit-code: '1'
-                ignore-unfixed: true
-                vuln-type: 'os'
-                severity: 'CRITICAL,HIGH'
+              run: |
+                docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+                  aquasec/trivy:0.76.2 image \
+                  --exit-code 1 --ignore-unfixed \
+                  --pkg-types os --severity CRITICAL,HIGH \
+                  ${{ steps.meta.outputs.image }}
             
             # Scan Go modules in the binary; report findings without failing (app code is third-party)
             - name: Trivy - Go dependencies (report only)
-              uses: aquasecurity/trivy-action@v0.76.2
-              with:
-                image-ref: '${{ steps.meta.outputs.image }}'
-                vuln-type: 'library'
-                severity: 'CRITICAL,HIGH'
-                ignore-unfixed: true
-                exit-code: '0'
+              run: |
+                docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+                  aquasec/trivy:0.76.2 image \
+                  --exit-code 0 --ignore-unfixed \
+                  --pkg-types library --severity CRITICAL,HIGH \
+                  ${{ steps.meta.outputs.image }}
 
             - name: Push image to ECR
               run: |
