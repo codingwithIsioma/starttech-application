@@ -2,36 +2,66 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: backend
+  name: backend-api
   labels:
-    app: backend
+    app: backend-api
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: backend
+      app: backend-api
   template:
     metadata:
       labels:
-        app: backend
+        app: backend-api
     spec:
       containers:
-        - name: backend
+        - name: backend-api
           image: 111194325114.dkr.ecr.us-east-1.amazonaws.com/starttech-backend-api:47066420a010510b92e05fb192d37d649c1206f5
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
+          env:
+            # --- secrets (from the gitignored Secret) ---
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef: { name: backend-api-secrets, key: MONGO_URI }
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef: { name: backend-api-secrets, key: JWT_SECRET_KEY }
+            # --- redis (app reads REDIS_ADDR; REDIS_HOST per brief) ---
+            - name: REDIS_HOST
+              value: "starttech-redis.pv9ts1.0001.use1.cache.amazonaws.com"
+            - name: REDIS_ADDR
+              value: "$(REDIS_HOST):6379"
+            - name: ENABLE_CACHE
+              value: "true"
+            # --- app config ---
+            - name: PORT
+              value: "8080"
+            - name: DB_NAME
+              value: "much_todo_db"
+            - name: LOG_LEVEL
+              value: "INFO"
+            - name: LOG_FORMAT
+              value: "json"
+            - name: SECURE_COOKIE
+              value: "true"
+            - name: COOKIE_DOMAINS
+              value: "d3ckz1apirqhgk.cloudfront.net"
+            - name: ALLOWED_ORIGINS
+              value: "https://d3ckz1apirqhgk.cloudfront.net"
           readinessProbe:
             httpGet:
               path: /health
-              port: 8000
+              port: 8080
             timeoutSeconds: 3
             periodSeconds: 5
             failureThreshold: 3
           livenessProbe:
             httpGet:
-              path: /health
-              port: 8000
+              path: /ping
+              port: 8080
             initialDelaySeconds: 10
             periodSeconds: 10
             failureThreshold: 3
@@ -42,3 +72,8 @@ spec:
             limits:
               cpu: 500m
               memory: 256Mi
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
