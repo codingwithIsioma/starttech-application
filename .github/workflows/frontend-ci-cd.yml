@@ -5,6 +5,7 @@ on:
         branches: [main]
         paths: 
             - frontend/**
+            - .github/workflows/frontend-ci-cd.yml
 
 permissions:
     contents: read
@@ -35,6 +36,8 @@ jobs:
 
             - name: Compile static site
               run: npm run build
+              env:
+                VITE_API_BASE_URL: /api/v1
 
             - name: Upload build artifact
               uses: actions/upload-artifact@v7
@@ -69,6 +72,6 @@ jobs:
               run: aws s3 sync dist/ s3://${{ secrets.FRONTEND_S3_BUCKET }} --delete
 
             - name: Invalidate CloudFront cache
-              run: aws cloudfront create-invalidation --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*".
+              run: aws cloudfront create-invalidation --distribution-id ${{ vars.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
 
         

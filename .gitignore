@@ -1,0 +1,27 @@
+# --- Kubernetes secrets / config with real values ---
+k8s/config.yaml
+k8s/*secret*.yaml
+k8s/*secret*.yml
+
+# --- Environment files (keep the .example templates) ---
+.env
+.env.*
+!.env.example
+
+# --- Go build output ---
+backend/muchtodo
+backend/bin/
+*.exe
+*.test
+*.out
+coverage.*
+
+# --- Logs ---
+*.log
+
+# --- OS / editor ---
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
