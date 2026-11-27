@@ -74,9 +74,8 @@ jobs:
 
             # Scan base-image OS packages; fail the build on fixable HIGH/CRITICAL issues
             - name: Trivy - OS packages (blocking)
-              uses: aquasecurity/trivy-action@v0.36.0
+              uses: aquasecurity/trivy-action@v0.76.2
               with:
-                version: 'v0.76.2'
                 image-ref: '${{ steps.meta.outputs.image }}'
                 exit-code: '1'
                 ignore-unfixed: true
@@ -85,9 +84,8 @@ jobs:
             
             # Scan Go modules in the binary; report findings without failing (app code is third-party)
             - name: Trivy - Go dependencies (report only)
-              uses: aquasecurity/trivy-action@v0.36.0
+              uses: aquasecurity/trivy-action@v0.76.2
               with:
-                version: 'v0.76.2'
                 image-ref: '${{ steps.meta.outputs.image }}'
                 vuln-type: 'library'
                 severity: 'CRITICAL,HIGH'
