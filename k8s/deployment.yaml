@@ -1,4 +1,27 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0-standalone-strict/all.json
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-api-dotenv
+  labels:
+    app: backend-api
+data:
+  .env: |
+    PORT=
+    MONGO_URI=
+    DB_NAME=
+    JWT_SECRET_KEY=
+    JWT_EXPIRATION_HOURS=72
+    ENABLE_CACHE=
+    REDIS_ADDR=
+    LOG_LEVEL=
+    LOG_FORMAT=
+    COOKIE_DOMAINS=
+    SECURE_COOKIE=
+    ALLOWED_ORIGINS=
+
+---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -51,6 +74,11 @@ spec:
               value: "d3ckz1apirqhgk.cloudfront.net"
             - name: ALLOWED_ORIGINS
               value: "https://d3ckz1apirqhgk.cloudfront.net"
+          volumeMounts:
+            - name: dotenv
+              mountPath: /app/.env
+              subPath: .env
+              readOnly: true
           readinessProbe:
             httpGet:
               path: /health
@@ -72,6 +100,10 @@ spec:
             limits:
               cpu: 500m
               memory: 256Mi
+      volumes:
+        - name: dotenv
+          configMap:
+            name: backend-api-dotenv
   strategy:
     type: RollingUpdate
     rollingUpdate:
